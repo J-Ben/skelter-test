@@ -1,4 +1,5 @@
 export { AddRandomButton } from './AddRandomButton';
+export { AnimationBadge } from './AnimationBadge';
 export { ArticleAuthor } from './ArticleAuthor';
 export { ArticleDate } from './ArticleDate';
 export { ArticleImage } from './ArticleImage';
