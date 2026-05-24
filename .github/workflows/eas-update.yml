@@ -18,6 +18,7 @@ jobs:
 
       - run: npm install -g eas-cli
 
-      - run: eas update --auto --non-interactive
+      - name: Publish OTA update
+        run: eas update --branch main --message "${{ github.event.head_commit.message }}"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
