@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { withSkeleton, SkeletonTheme } from 'react-zero-skeleton';
+import { withSkeleton, SkeletonTheme, SkeletonIgnore } from 'react-zero-skeleton';
 import { useCardData } from '@/src/hooks/useCardData';
 import { AnimationBadge } from '@/src/components/atoms';
+import { useTheme, useSkeletonAnimation } from '@/src/hooks/useTheme';
 
 type Holiday = { name: string; localName: string; date: string; daysUntil: number };
-
 const PLACEHOLDER: Holiday = { name: 'Assumption of Mary', localName: 'Assomption', date: '2026-08-15', daysUntil: 42 };
 
 async function fetchHoliday(): Promise<Holiday> {
@@ -17,36 +17,36 @@ async function fetchHoliday(): Promise<Holiday> {
 }
 
 function HolidayCardBase({ data }: { data: Holiday }) {
+  const t = useTheme();
   const [year, month, day] = data.date.split('-');
-  const formatted = new Date(+year, +month - 1, +day).toLocaleDateString('en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long',
-  });
+  const formatted = new Date(+year, +month - 1, +day).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   return (
     <View style={s.wrap}>
-      <Text style={s.header}>Next public holiday 🇫🇷</Text>
-      <Text style={s.localName}>{data.localName}</Text>
-      <Text style={s.name}>{data.name}</Text>
+      <SkeletonIgnore><Text style={[s.header, { color: t.muted }]}>Next public holiday 🇫🇷</Text></SkeletonIgnore>
+      <Text style={[s.localName, { color: t.text }]}>{data.localName}</Text>
+      <Text style={[s.name, { color: t.muted }]}>{data.name}</Text>
       <View style={s.footer}>
         <View style={s.footerLeft}>
-          <Text style={s.footerLabel}>Date</Text>
-          <Text style={s.footerValue}>{formatted}</Text>
+          <Text style={[s.footerLabel, { color: t.muted2 }]}>Date</Text>
+          <Text style={[s.footerValue, { color: t.text }]}>{formatted}</Text>
         </View>
         <View style={s.daysWrap}>
-          <Text style={s.daysCount}>{data.daysUntil}</Text>
-          <Text style={s.daysLabel}>days</Text>
+          <Text style={[s.daysCount, { color: t.accent }]}>{data.daysUntil}</Text>
+          <SkeletonIgnore><Text style={[s.daysLabel, { color: t.muted }]}>days</Text></SkeletonIgnore>
         </View>
       </View>
     </View>
   );
 }
-
 const HolidayCardSkeleton = withSkeleton(HolidayCardBase);
 
 export function HolidayCard({ delay, reloadKey }: { delay: number; reloadKey: number }) {
+  const t = useTheme();
+  const anim = useSkeletonAnimation('wave');
   const { data, isLoading } = useCardData(fetchHoliday, delay, reloadKey);
   return (
     <View>
-      <SkeletonTheme animation="wave" revealOnExit color="#3f3f46" highlightColor="#71717a" borderRadius={6} minDuration={3000}>
+      <SkeletonTheme animation={anim} exit="fadeRight" revealOnExit color={t.skeleton} highlightColor={t.skeletonHi} borderRadius={6} minDuration={3000}>
         <HolidayCardSkeleton hasSkeleton isLoading={isLoading} data={data ?? PLACEHOLDER} />
       </SkeletonTheme>
       <AnimationBadge label="wave" />
@@ -55,15 +55,15 @@ export function HolidayCard({ delay, reloadKey }: { delay: number; reloadKey: nu
 }
 
 const s = StyleSheet.create({
-  wrap:       { padding: 24 },
-  header:     { fontSize: 11, color: '#71717a', marginBottom: 16, textTransform: 'uppercase', letterSpacing: 1, alignSelf: 'flex-start' },
-  localName:  { fontSize: 20, fontWeight: '700', marginBottom: 6, color: '#f4f4f5', alignSelf: 'flex-start' },
-  name:       { fontSize: 13, color: '#71717a', marginBottom: 20, alignSelf: 'flex-start' },
-  footer:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  footerLeft: { alignItems: 'flex-start' },
-  footerLabel:{ fontSize: 11, color: '#52525b', marginBottom: 2 },
-  footerValue:{ fontSize: 13, fontWeight: '600', color: '#f4f4f5' },
-  daysWrap:   { alignItems: 'flex-end' },
-  daysCount:  { fontSize: 36, fontWeight: '700', color: '#f97316', lineHeight: 38 },
-  daysLabel:  { fontSize: 11, color: '#71717a' },
+  wrap:        { padding: 24 },
+  header:      { fontSize: 11, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 1, alignSelf: 'flex-start' },
+  localName:   { fontSize: 20, fontWeight: '700', marginBottom: 6, alignSelf: 'flex-start' },
+  name:        { fontSize: 13, marginBottom: 20, alignSelf: 'flex-start' },
+  footer:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  footerLeft:  { alignItems: 'flex-start' },
+  footerLabel: { fontSize: 11, marginBottom: 2 },
+  footerValue: { fontSize: 13, fontWeight: '600' },
+  daysWrap:    { alignItems: 'flex-end' },
+  daysCount:   { fontSize: 36, fontWeight: '700', lineHeight: 38 },
+  daysLabel:   { fontSize: 11 },
 });

@@ -1,189 +1,105 @@
-import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AddRandomButton, Chip, ReloadButton } from '@/src/components/atoms';
 import {
-  AnimationPicker,
-  CodeModal,
-  type SkeletonAnimation,
-  type SkeletonSpeed,
-  SpeedPicker,
-} from '@/src/components/molecules';
-import {
-  ArticleCard,
-  BannerCarousel,
-  ProfileCard,
+  WeatherCard, CurrencyCard, AirQualityCard, HolidayCard,
+  EarthquakeCard, ProductCard, HackerNewsCard, HealthCard, ParagraphCard,
 } from '@/src/components/organisms';
-import { useFakeLoading } from '@/src/hooks/useFakeLoading';
-import { MOCK_ARTICLE } from '@/src/mocks/article.mock';
-import { MOCK_BANNERS } from '@/src/mocks/banner.mock';
-import { MOCK_PROFILE } from '@/src/mocks/profile.mock';
-import { CODE_SNIPPETS } from '@/src/constants/codeSnippets';
+import { useTheme, useThemeToggle, ANIMATIONS } from '@/src/hooks/useTheme';
 
-import { homeStyles as styles } from './Home.styles';
-
-type Kind = 'article' | 'profile' | 'carousel';
-const KINDS: Kind[] = ['article', 'profile', 'carousel'];
-
-type Item = { id: string; kind: Kind };
-
-const makeItem = (kind: Kind): Item => ({
-  id: `${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-  kind,
-});
+const DELAYS = [0, 300, 600, 900, 1200, 1500, 1800, 2100];
 
 export function HomeScreen() {
-  const { isLoading, reload } = useFakeLoading();
-  const [animation, setAnimation] = useState<SkeletonAnimation>('pulse');
-  const [speed, setSpeed] = useState<SkeletonSpeed>('normal');
-  const [items, setItems] = useState<Item[]>(() => [
-    makeItem('profile'),
-    makeItem('carousel'),
-    makeItem('article'),
-  ]);
-  const [focusMode, setFocusMode] = useState(false);
-  const [codeKind, setCodeKind] = useState<Kind | null>(null);
-
-  const skeletonConfig = useMemo(
-    () => ({
-      animation,
-      color: '#D0D0D0',
-      highlightColor: '#FFFFFF',
-      speed,
-    }),
-    [animation, speed],
-  );
-
-  const addRandom = useCallback(() => {
-    const kind = KINDS[Math.floor(Math.random() * KINDS.length)];
-    setItems((prev) => [...prev, makeItem(kind)]);
-  }, []);
-
-  const addKind = useCallback((kind: Kind) => {
-    setItems((prev) => [...prev, makeItem(kind)]);
-  }, []);
-
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-  }, []);
+  const [reloadKey, setReloadKey] = useState(0);
+  const t = useTheme();
+  const { isDark, toggle, cascade, toggleCascade, globalAnimation, setGlobalAnimation } = useThemeToggle();
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      edges={['top', 'left', 'right', 'bottom']}
-    >
-      <View style={styles.topBar}>
-        <View style={styles.headingRow}>
-          <Text style={styles.heading}>react-zero-skeleton demo</Text>
-          <Pressable
-            onPress={() => setFocusMode((f) => !f)}
-            style={[
-              styles.focusToggle,
-              focusMode && styles.focusToggleActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.focusToggleText,
-                focusMode && styles.focusToggleTextActive,
-              ]}
-            >
-              {focusMode ? 'Show options' : 'Focus'}
-            </Text>
-          </Pressable>
-        </View>
-        {!focusMode && (
-          <>
-            <AnimationPicker value={animation} onChange={setAnimation} />
-            <SpeedPicker value={speed} onChange={setSpeed} />
-          </>
-        )}
-      </View>
-
+    <SafeAreaView style={[s.container, { backgroundColor: t.bg }]} edges={['top', 'left', 'right', 'bottom']}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        style={s.scroll}
+        contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
       >
-        {items.length === 0 ? (
-          <Text style={styles.empty}>
-            No component yet — tap “Add random” below.
+        <View style={s.header}>
+          <Text style={[s.appName, { color: t.text }]}>skelter</Text>
+          <Text style={[s.subtitle, { color: t.muted2 }]}>The loading experience your users deserve</Text>
+          <Text style={[s.animLabel, { color: t.muted }]}>
+            anim: {globalAnimation ?? 'preset'}
           </Text>
-        ) : (
-          items.map((item) => {
-            const codeBtn = (
-              <Pressable
-                onPress={() => setCodeKind(item.kind)}
-                style={styles.codeBtn}
-                hitSlop={8}
-              >
-                <Text style={styles.codeBtnText}>{'</>'}</Text>
-              </Pressable>
-            );
-            if (item.kind === 'carousel') {
-              return (
-                <View key={item.id} style={styles.itemWrap}>
-                  <BannerCarousel
-                    banners={MOCK_BANNERS}
-                    isLoading={isLoading}
-                    skeletonConfig={skeletonConfig}
-                  />
-                  {codeBtn}
-                </View>
-              );
-            }
-            return (
-              <View key={item.id} style={styles.itemWrap}>
-                <Pressable
-                  onLongPress={() => removeItem(item.id)}
-                  delayLongPress={350}
-                >
-                  {item.kind === 'article' && (
-                    <ArticleCard
-                      article={MOCK_ARTICLE}
-                      isLoading={isLoading}
-                      skeletonConfig={skeletonConfig}
-                    />
-                  )}
-                  {item.kind === 'profile' && (
-                    <ProfileCard
-                      profile={MOCK_PROFILE}
-                      isLoading={isLoading}
-                      skeletonConfig={skeletonConfig}
-                    />
-                  )}
-                </Pressable>
-                {codeBtn}
-              </View>
-            );
-          })
-        )}
+        </View>
+
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><WeatherCard    delay={DELAYS[0]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><HackerNewsCard delay={DELAYS[1]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><CurrencyCard   delay={DELAYS[2]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><AirQualityCard delay={DELAYS[3]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><HolidayCard    delay={DELAYS[4]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><ProductCard    delay={DELAYS[5]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><EarthquakeCard delay={DELAYS[6]} reloadKey={reloadKey} /></View>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><HealthCard     delay={DELAYS[7]} reloadKey={reloadKey} /></View>
+
+        <Text style={[s.sectionTitle, { color: t.text }]}>Paragraph</Text>
+        <Text style={[s.sectionSub, { color: t.muted2 }]}>SkeletonParagraph · lines & words</Text>
+        <View style={[s.card, { backgroundColor: t.surface, borderColor: t.border }]}><ParagraphCard  delay={DELAYS[2]} reloadKey={reloadKey} /></View>
+
+        <Text style={[s.footer, { color: t.muted2 }]}>with ♥ Ben-J</Text>
       </ScrollView>
 
-      {!focusMode && (
-        <View style={styles.addRow}>
-          {KINDS.map((kind) => (
-            <Chip
-              key={kind}
-              label={`+ ${kind}`}
-              onPress={() => addKind(kind)}
-            />
-          ))}
-        </View>
-      )}
-
-      <View style={styles.bottomBar}>
-        <AddRandomButton onPress={addRandom} label="Add random" />
-        <ReloadButton isLoading={isLoading} onPress={reload} />
+      <View style={[s.bottomBar, { borderTopColor: t.border, backgroundColor: t.bg }]}>
+        <Pressable
+          onPress={() => setReloadKey(k => k + 1)}
+          style={({ pressed }) => [s.reloadBtn, { backgroundColor: t.surface2, flex: 1 }, pressed && s.reloadBtnPressed]}
+        >
+          <Text style={[s.reloadText, { color: t.text }]}>Reload ↺</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            const idx = globalAnimation ? ANIMATIONS.indexOf(globalAnimation) : -1;
+            const next = idx < ANIMATIONS.length - 1 ? ANIMATIONS[idx + 1] : null;
+            setGlobalAnimation(next);
+            setReloadKey(k => k + 1);
+          }}
+          style={({ pressed }) => [s.themeBtn, { backgroundColor: globalAnimation ? t.accent + '22' : t.surface2, borderColor: globalAnimation ? t.accent : t.border }, pressed && s.reloadBtnPressed]}
+        >
+          <Text style={[s.reloadText, { color: globalAnimation ? t.accent : t.text }]}>
+            {globalAnimation ? `A${ANIMATIONS.indexOf(globalAnimation) + 1}` : 'A0'}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={toggleCascade}
+          style={({ pressed }) => [s.themeBtn, { backgroundColor: cascade > 0 ? t.accent + '22' : t.surface2, borderColor: cascade > 0 ? t.accent : t.border }, pressed && s.reloadBtnPressed]}
+        >
+          <Text style={[s.reloadText, { color: cascade > 0 ? t.accent : t.text }]}>↓</Text>
+        </Pressable>
+        <Pressable
+          onPress={toggle}
+          style={({ pressed }) => [s.themeBtn, { backgroundColor: t.surface2, borderColor: t.border }, pressed && s.reloadBtnPressed]}
+        >
+          <Text style={[s.reloadText, { color: t.text }]}>{isDark ? '☀︎' : '☽'}</Text>
+        </Pressable>
       </View>
-
-      <CodeModal
-        visible={codeKind !== null}
-        title={codeKind ? `${codeKind} — source` : ''}
-        code={codeKind ? CODE_SNIPPETS[codeKind] : ''}
-        onClose={() => setCodeKind(null)}
-      />
     </SafeAreaView>
   );
 }
+
+const s = StyleSheet.create({
+  container:        { flex: 1 },
+  scroll:           { flex: 1 },
+  content:          { paddingBottom: 24 },
+  header:           { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 20 },
+  appName:          { fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  subtitle:         { fontSize: 13, marginBottom: 6 },
+  animLabel:        { fontSize: 11, fontFamily: 'monospace' },
+  footer:           { textAlign: 'center', fontSize: 12, paddingVertical: 28 },
+  sectionTitle:     { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, marginHorizontal: 16, marginTop: 24, marginBottom: 2 },
+  sectionSub:       { fontSize: 12, fontFamily: 'monospace', marginHorizontal: 16, marginBottom: 12 },
+  card:             { marginHorizontal: 16, marginBottom: 12, borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
+  row:              { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, gap: 8 },
+  cardHalf:         { flex: 1, borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
+  bottomBar:        { paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, flexDirection: 'row', gap: 10 },
+  reloadBtn:        { borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+  themeBtn:         { borderRadius: 10, paddingVertical: 14, paddingHorizontal: 20, alignItems: 'center', borderWidth: 1 },
+  reloadBtnPressed: { opacity: 0.7 },
+  reloadText:       { fontSize: 14, fontWeight: '600' },
+});

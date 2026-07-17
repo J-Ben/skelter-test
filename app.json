@@ -40,11 +40,28 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "568dd7ef-a91e-4422-a444-b1c336689b5a"
+      }
+    },
+    "owner": "ben-jmk",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/568dd7ef-a91e-4422-a444-b1c336689b5a"
     }
   }
 }

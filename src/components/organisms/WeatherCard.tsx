@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { withSkeleton, SkeletonTheme } from 'react-zero-skeleton';
 import { useCardData } from '@/src/hooks/useCardData';
 import { AnimationBadge } from '@/src/components/atoms';
+import { useTheme, useSkeletonAnimation } from '@/src/hooks/useTheme';
 
 type Weather = { city: string; temp: number; feelsLike: number; humidity: number; wind: number; description: string };
 
@@ -30,25 +31,26 @@ async function fetchWeather(): Promise<Weather> {
   };
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={s.stat}>
-      <Text style={s.statLabel}>{label}</Text>
-      <Text style={s.statValue}>{value}</Text>
-    </View>
-  );
-}
-
 function WeatherCardBase({ data }: { data: Weather }) {
+  const t = useTheme();
   return (
     <View style={s.wrap}>
-      <Text style={s.city}>{data.city}</Text>
-      <Text style={s.temp}>{data.temp}°</Text>
-      <Text style={s.desc}>{data.description}</Text>
+      <Text style={[s.city, { color: t.muted }]}>{data.city}</Text>
+      <Text style={[s.temp, { color: t.text }]}>{data.temp}°</Text>
+      <Text style={[s.desc, { color: t.muted2 }]}>{data.description}</Text>
       <View style={s.row}>
-        <Stat label="Feels like" value={`${data.feelsLike}°`} />
-        <Stat label="Humidity"   value={`${data.humidity}%`} />
-        <Stat label="Wind"       value={`${data.wind} km/h`} />
+        <View style={s.stat}>
+          <Text style={[s.statLabel, { color: t.muted2 }]}>Feels like</Text>
+          <Text style={[s.statValue, { color: t.text }]}>{data.feelsLike}°</Text>
+        </View>
+        <View style={s.stat}>
+          <Text style={[s.statLabel, { color: t.muted2 }]}>Humidity</Text>
+          <Text style={[s.statValue, { color: t.text }]}>{data.humidity}%</Text>
+        </View>
+        <View style={s.stat}>
+          <Text style={[s.statLabel, { color: t.muted2 }]}>Wind</Text>
+          <Text style={[s.statValue, { color: t.text }]}>{data.wind} km/h</Text>
+        </View>
       </View>
     </View>
   );
@@ -57,12 +59,14 @@ function WeatherCardBase({ data }: { data: Weather }) {
 const WeatherCardSkeleton = withSkeleton(WeatherCardBase);
 
 export function WeatherCard({ delay, reloadKey }: { delay: number; reloadKey: number }) {
+  const t = useTheme();
+  const anim = useSkeletonAnimation('shatter');
   const { data, isLoading } = useCardData(fetchWeather, delay, reloadKey);
   return (
     <View>
-      <SkeletonTheme animation="shatter" revealOnExit color="#3f3f46" highlightColor="#71717a" borderRadius={6}
-        minDuration={3000} shatterConfig={{ cellSize: 13, stagger: 60, fadeStyle: 'random',gridSize: 100 }}>
-        <WeatherCardSkeleton hasSkeleton isLoading={isLoading} data={data ?? PLACEHOLDER}  /> 
+      <SkeletonTheme animation={anim} exit="fadeUp" revealOnExit color={t.skeleton} highlightColor={t.skeletonHi} borderRadius={6}
+        minDuration={3000} shatterConfig={{ cellSize: 13, stagger: 60, fadeStyle: 'random', gridSize: 100 }}>
+        <WeatherCardSkeleton hasSkeleton isLoading={isLoading} data={data ?? PLACEHOLDER} />
       </SkeletonTheme>
       <AnimationBadge label="shatter" />
     </View>
@@ -71,11 +75,11 @@ export function WeatherCard({ delay, reloadKey }: { delay: number; reloadKey: nu
 
 const s = StyleSheet.create({
   wrap:      { padding: 36 },
-  city:      { fontSize: 13, color: '#71717a', marginBottom: 4, alignSelf: 'flex-start' },
-  temp:      { fontSize: 56, fontWeight: '700', lineHeight: 60, marginBottom: 4, color: '#f4f4f5', alignSelf: 'flex-start' },
-  desc:      { fontSize: 15, color: '#a1a1aa', marginBottom: 20, alignSelf: 'flex-start' },
+  city:      { fontSize: 13, marginBottom: 4, alignSelf: 'flex-start' },
+  temp:      { fontSize: 56, fontWeight: '700', lineHeight: 60, marginBottom: 4, alignSelf: 'flex-start' },
+  desc:      { fontSize: 15, marginBottom: 20, alignSelf: 'flex-start' },
   row:       { flexDirection: 'row', gap: 24 },
   stat:      { alignItems: 'flex-start' },
-  statLabel: { fontSize: 11, color: '#52525b', marginBottom: 2 },
-  statValue: { fontSize: 15, fontWeight: '600', color: '#f4f4f5' },
+  statLabel: { fontSize: 11, marginBottom: 2 },
+  statValue: { fontSize: 15, fontWeight: '600' },
 });

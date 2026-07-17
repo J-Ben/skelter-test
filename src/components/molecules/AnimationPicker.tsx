@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ANIMATIONS = ['pulse', 'wave', 'shiver', 'shatter', 'none'] as const;
+export const ANIMATIONS = ['pulse', 'wave', 'shiver', 'drip', 'shatter', 'slide', 'beat', 'none'] as const;
 export type SkeletonAnimation = (typeof ANIMATIONS)[number];
 
 type Props = {
